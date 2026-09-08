@@ -211,7 +211,10 @@ COMMITTER_DIR="${BUILD_DIR}/fabric-x-committer"
 checkout_source "${COMMITTER_REPO}" "${COMMITTER_REF}" "${COMMITTER_DIR}" "${COMMITTER_LOCAL_PATH:-}" "fabric-x-committer"
 
 echo "Building ${COMMITTER_IMAGE_NAME} image from ${COMMITTER_DIR}..."
-make -C "${COMMITTER_DIR}" build-image-test-node
+# Use an isolated GOMODCACHE so the committer build resolves its own declared
+# dependency versions (e.g. grpc v1.83.1) and is never influenced by a stale
+# shared module cache from a prior CI run that had different versions.
+GOMODCACHE="${BUILD_DIR}/.gomodcache-committer" make -C "${COMMITTER_DIR}" build-image-test-node
 # build-image-test-node creates docker.io/hyperledger/${COMMITTER_IMAGE_NAME} locally.
 # Tag with refs.conf-derived tag expected by run-e2e.sh.
 COMMITTER_IMAGE_BASE="docker.io/hyperledger/${COMMITTER_IMAGE_NAME}"
